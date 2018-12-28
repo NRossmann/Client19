@@ -1,0 +1,91 @@
+//Zu getMovetoSwarm
+  private ArrayList<Move> getMovetoField(Field field){
+    ArrayList<Move> returnmoves = new ArrayList<>();
+    Field[] ownFields = GameRuleLogic.getOwnFields(board,currentPlayer.getColor()).toArray(new Field[15]);
+    for (Field ownField : ownFields) {
+      if (ownField != null) {
+        if (Fieldcheck(ownField.getX(), ownField.getY(), Direction.DOWN, field)) {
+          returnmoves.add( new Move(ownField.getX(), ownField.getY(), Direction.DOWN));
+        }
+
+        if (Fieldcheck(ownField.getX(), ownField.getY(), Direction.DOWN_RIGHT, field)) {
+          returnmoves.add( new Move(ownField.getX(), ownField.getY(), Direction.DOWN_RIGHT));
+        }
+
+        if (Fieldcheck(ownField.getX(), ownField.getY(), Direction.DOWN_LEFT, field)) {
+          returnmoves.add( new Move(ownField.getX(), ownField.getY(), Direction.DOWN_LEFT));
+        }
+
+        if (Fieldcheck(ownField.getX(), ownField.getY(), Direction.LEFT, field)) {
+          returnmoves.add( new Move(ownField.getX(), ownField.getY(), Direction.LEFT));
+        }
+
+        if (Fieldcheck(ownField.getX(), ownField.getY(), Direction.RIGHT, field)) {
+          returnmoves.add( new Move(ownField.getX(), ownField.getY(), Direction.RIGHT));
+        }
+
+        if (Fieldcheck(ownField.getX(), ownField.getY(), Direction.UP, field)) {
+          returnmoves.add( new Move(ownField.getX(), ownField.getY(), Direction.UP));
+        }
+
+        if (Fieldcheck(ownField.getX(), ownField.getY(), Direction.UP_RIGHT, field)) {
+          returnmoves.add( new Move(ownField.getX(), ownField.getY(), Direction.UP_RIGHT));
+        }
+
+        if (Fieldcheck(ownField.getX(), ownField.getY(), Direction.UP_LEFT, field)) {
+          returnmoves.add( new Move(ownField.getX(), ownField.getY(), Direction.UP_LEFT));
+        }
+
+      }
+    }
+
+    return returnmoves;
+    }
+
+
+  //Zu getMovetoSwarm
+  private Boolean Fieldcheck(int x, int y, Direction direction, Field field){
+    try{
+      int distance = GameRuleLogic.calculateMoveDistance(board, x, y, direction);
+      GameRuleLogic.isValidToMove(gameState, x, y, direction, distance);
+      Field calField = GameRuleLogic.getFieldInDirection(board, x, y, direction, distance);
+      if (calField.getX() == field.getX() && calField.getY() == field.getY()){
+        return true;
+      }
+    }catch (Exception ignored){
+    }
+    return false;
+  }
+
+  //Gibt Züge zurück die zu dem eigenen größten Schwarm führen
+  private ArrayList<Move> getMovetoSwarm(Player player){
+    Set<Field> swarmset = GameRuleLogic.greatestSwarm(board,player.getColor());
+    Field[] swarm = swarmset.toArray(new Field[0]);
+    ArrayList<Field> amswarm = new ArrayList<>();
+    ArrayList<Move> movestoswarm = new ArrayList<>();
+    for (Field checkfield : swarm) {
+      for(int i = checkfield.getX()-1;i<=checkfield.getX()+1;i++){
+        for(int j = checkfield.getY()-1;j<=checkfield.getY()+1;j++) {
+          if (!swarmset.contains(new Field(i, j))) {
+            amswarm.add(new Field(i, j));
+          }
+        }
+      }
+    }
+
+    for (Field anAmswarm : amswarm) {
+      try {
+        ArrayList<Move> tofield = getMovetoField(anAmswarm);
+        for (Move aTofield : tofield) {
+          Field startfield = new Field(aTofield.x, aTofield.y);
+          if (!swarmset.contains(startfield)) {
+            movestoswarm.add(aTofield);
+          }
+        }
+      } catch (NullPointerException e) {
+        log.debug(e.getMessage());
+      }
+
+    }
+    return movestoswarm;
+  }
