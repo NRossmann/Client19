@@ -454,15 +454,16 @@ public class Logic implements IGameHandler {
     }
     return false;
   }
-  public Move early_game_value(){
+  public Move early_game_move(){
 
     int position = 5;
+
     int runde = 0;
 
     boolean moveFound = false;
       while(!moveFound) {
         for (int i = position - runde; i <= position; i++) {
-          for (int j = position - runde; j <= position; j++) {
+          for (int j = position - runde; j <= position+runde; j++) {
 
             Field f = new Field(i, j);
             ArrayList<Move> m = getMovetoField(f);
@@ -475,7 +476,7 @@ public class Logic implements IGameHandler {
           }
 
         }
-        position--;
+
        runde++;
       }
     return null;
