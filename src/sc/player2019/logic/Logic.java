@@ -12,7 +12,10 @@ import sc.shared.WinCondition;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Set;
+
+
 
 /**
  * Das Herz des Clients:
@@ -394,6 +397,90 @@ public class Logic implements IGameHandler {
     System.out.println(returnFields);
     return GameRuleLogic.greatestSwarm(board, returnFields);
   }
+  private ArrayList<Move> getMovetoField(Field field){
+    ArrayList<Move> returnmoves = new ArrayList<>();
+    Field[] ownFields = GameRuleLogic.getOwnFields(board,currentPlayer.getColor()).toArray(new Field[15]);
+    for (Field ownField : ownFields) {
+      if (ownField != null) {
+        if (Fieldcheck(ownField.getX(), ownField.getY(), Direction.DOWN, field)) {
+          returnmoves.add( new Move(ownField.getX(), ownField.getY(), Direction.DOWN));
+        }
+
+        if (Fieldcheck(ownField.getX(), ownField.getY(), Direction.DOWN_RIGHT, field)) {
+          returnmoves.add( new Move(ownField.getX(), ownField.getY(), Direction.DOWN_RIGHT));
+        }
+
+        if (Fieldcheck(ownField.getX(), ownField.getY(), Direction.DOWN_LEFT, field)) {
+          returnmoves.add( new Move(ownField.getX(), ownField.getY(), Direction.DOWN_LEFT));
+        }
+
+        if (Fieldcheck(ownField.getX(), ownField.getY(), Direction.LEFT, field)) {
+          returnmoves.add( new Move(ownField.getX(), ownField.getY(), Direction.LEFT));
+        }
+
+        if (Fieldcheck(ownField.getX(), ownField.getY(), Direction.RIGHT, field)) {
+          returnmoves.add( new Move(ownField.getX(), ownField.getY(), Direction.RIGHT));
+        }
+
+        if (Fieldcheck(ownField.getX(), ownField.getY(), Direction.UP, field)) {
+          returnmoves.add( new Move(ownField.getX(), ownField.getY(), Direction.UP));
+        }
+
+        if (Fieldcheck(ownField.getX(), ownField.getY(), Direction.UP_RIGHT, field)) {
+          returnmoves.add( new Move(ownField.getX(), ownField.getY(), Direction.UP_RIGHT));
+        }
+
+        if (Fieldcheck(ownField.getX(), ownField.getY(), Direction.UP_LEFT, field)) {
+          returnmoves.add( new Move(ownField.getX(), ownField.getY(), Direction.UP_LEFT));
+        }
+
+      }
+    }
+
+    return returnmoves;
+  }
+
+
+  //Zu getMovetoSwarm
+  private Boolean Fieldcheck(int x, int y, Direction direction, Field field){
+    try{
+      int distance = GameRuleLogic.calculateMoveDistance(board, x, y, direction);
+      GameRuleLogic.isValidToMove(gameState, x, y, direction, distance);
+      Field calField = GameRuleLogic.getFieldInDirection(board, x, y, direction, distance);
+      if (calField.getX() == field.getX() && calField.getY() == field.getY()){
+        return true;
+      }
+    }catch (Exception ignored){
+    }
+    return false;
+  }
+  public Move early_game_value(){
+
+    int position = 5;
+    int runde = 0;
+
+    boolean moveFound = false;
+      while(!moveFound) {
+        for (int i = position - runde; i <= position; i++) {
+          for (int j = position - runde; j <= position; j++) {
+
+            Field f = new Field(i, j);
+            ArrayList<Move> m = getMovetoField(f);
+            if (m.size() > 0) {
+              moveFound = !moveFound;
+              Random rand = new Random();
+              return m.get(rand.nextInt(m.size()));
+
+           }
+          }
+
+        }
+        position--;
+       runde++;
+      }
+    return null;
+  }
+
 }
 
 
