@@ -11,6 +11,7 @@ import sc.shared.PlayerColor;
 import sc.shared.WinCondition;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -399,6 +400,20 @@ public class Logic implements IGameHandler {
     }
 
     return s;
+  }
+  public static Set<Field> größterSchwarm(Board board, PlayerColor player) {
+    Set<Field> occupiedFields = GameRuleLogic.getOwnFields(board, player);
+    Set<Field> returnFields = new HashSet<>();
+    Set<Field> falseFields = new HashSet<>();
+    System.out.println(occupiedFields);
+
+    for (Field f : occupiedFields) {
+      if (f.getX() != 0 && f.getY() != 0 && f.getX() != 9 && f.getY() != 9){returnFields.add(f);}
+      else{falseFields.add(f);}
+    }
+    System.out.println(falseFields.toString());
+    System.out.println(returnFields);
+    return GameRuleLogic.greatestSwarm(board, returnFields);
   }
 }
 
