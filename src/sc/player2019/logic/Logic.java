@@ -37,6 +37,12 @@ public class Logic implements IGameHandler {
   private static final String ANSI_GREEN = "\u001B[32m";
   private static final String ANSI_CYAN = "\u001B[36m";
 
+
+  final int midgamemyswarm = 4;
+  final int midgameopsswarm = 1;
+  final int endgamemyswarm = 4;
+  final int endgameopsswarm = 1;
+
   private static final Logger log = LoggerFactory.getLogger(Logic.class);
 
   /**
@@ -145,9 +151,12 @@ public class Logic implements IGameHandler {
   //Gibt den Zug zurück der gemacht werden soll
   private Move getsendmove(ArrayList<Move> possibleMoves,int turn){
 
-    if (turn<8){
-      return possibleMoves.get(1);
-    }else if (!bigestswarmmiddle()){
+    if (turn<10){
+      log.error("Early Game");
+      return early_game_move();
+
+    }else if (turn<20){
+      log.error("Mid Game");
       //Mid Game Logic
       int[] moveints = new int[possibleMoves.size()];
       for (int i = 0; i<possibleMoves.size();i++){
@@ -157,6 +166,7 @@ public class Logic implements IGameHandler {
 
       return possibleMoves.get(bestmove);
     }else{
+      log.error("late Game");
       //late Game Logic
       int[] moveints = new int[possibleMoves.size()];
       for (int i = 0; i<possibleMoves.size();i++){
@@ -173,7 +183,7 @@ public class Logic implements IGameHandler {
   private boolean bigestswarmmiddle(){
     Set<Field> swarmmiddle = größterSchwarm(board,currentPlayer.getColor());
     Set<Field> biggestswarm = GameRuleLogic.greatestSwarm(board,currentPlayer.getColor());
-    if (swarmmiddle.equals(biggestswarm)){
+    if (swarmmiddle == biggestswarm){
       return true;
     }
     return false;
@@ -212,16 +222,16 @@ public class Logic implements IGameHandler {
 
     //Prüfen ob sich mein Schwarm vergößert hat
     if (swarmafter>swarmbefore){
-      moveint += ((swarmafter-swarmbefore)*(swarmafter-swarmbefore))*2;
+      moveint += ((swarmafter-swarmbefore)*(swarmafter-swarmbefore))*endgamemyswarm;
     }else{
-      moveint -= ((swarmafter-swarmbefore)*(swarmafter-swarmbefore))*2;
+      moveint -= ((swarmafter-swarmbefore)*(swarmafter-swarmbefore))*endgamemyswarm;
     }
 
     //Prüfen ob sich der Schwarm des Gegners vergrößert hat
     if (opswarmafter>opswarmbefore){
-      moveint -= ((opswarmafter-opswarmbefore)*(opswarmafter-opswarmbefore));
+      moveint -= ((opswarmafter-opswarmbefore)*(opswarmafter-opswarmbefore)*endgameopsswarm);
     }else {
-      moveint += ((opswarmafter-opswarmbefore)*(opswarmafter-opswarmbefore));
+      moveint += ((opswarmafter-opswarmbefore)*(opswarmafter-opswarmbefore)*endgameopsswarm);
     }
 
     return moveint;
@@ -258,16 +268,16 @@ public class Logic implements IGameHandler {
 
     //Prüfen ob sich mein Schwarm vergößert hat
     if (swarmafter>swarmbefore){
-      moveint += ((swarmafter-swarmbefore)*(swarmafter-swarmbefore))*2;
+      moveint += ((swarmafter-swarmbefore)*(swarmafter-swarmbefore))*midgamemyswarm;
     }else{
-      moveint -= ((swarmafter-swarmbefore)*(swarmafter-swarmbefore))*2;
+      moveint -= ((swarmafter-swarmbefore)*(swarmafter-swarmbefore))*midgamemyswarm;
     }
 
     //Prüfen ob sich der Schwarm des Gegners vergrößert hat
     if (opswarmafter>opswarmbefore){
-      moveint -= ((opswarmafter-opswarmbefore)*(opswarmafter-opswarmbefore));
+      moveint -= ((opswarmafter-opswarmbefore)*(opswarmafter-opswarmbefore)*midgameopsswarm);
     }else {
-      moveint += ((opswarmafter-opswarmbefore)*(opswarmafter-opswarmbefore));
+      moveint += ((opswarmafter-opswarmbefore)*(opswarmafter-opswarmbefore)*midgameopsswarm);
     }
 
     return moveint;
@@ -375,26 +385,26 @@ public class Logic implements IGameHandler {
   private int search(int arr[], int n)
   {
     int s = 0;
+    int j = 0;
     for (int i = 0; i < n; i++) {
 
       if (arr[i] > s)
         s = arr[i];
+        j=i;
     }
 
-    return s;
+    return j;
   }
   public static Set<Field> größterSchwarm(Board board, PlayerColor player) {
     Set<Field> occupiedFields = GameRuleLogic.getOwnFields(board, player);
     Set<Field> returnFields = new HashSet<>();
     Set<Field> falseFields = new HashSet<>();
-    System.out.println(occupiedFields);
+
 
     for (Field f : occupiedFields) {
       if (f.getX() != 0 && f.getY() != 0 && f.getX() != 9 && f.getY() != 9){returnFields.add(f);}
       else{falseFields.add(f);}
     }
-    System.out.println(falseFields.toString());
-    System.out.println(returnFields);
     return GameRuleLogic.greatestSwarm(board, returnFields);
   }
   private ArrayList<Move> getMovetoField(Field field){
