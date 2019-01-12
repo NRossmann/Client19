@@ -1,5 +1,6 @@
 package sc.player2019.logic;
 
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sc.framework.plugins.Player;
@@ -405,6 +406,10 @@ public class Logic implements IGameHandler {
       if (f.getX() != 0 && f.getY() != 0 && f.getX() != 9 && f.getY() != 9){returnFields.add(f);}
       else{falseFields.add(f);}
     }
+/*<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes*/
     return GameRuleLogic.greatestSwarm(board, returnFields);
   }
   private ArrayList<Move> getMovetoField(Field field){
@@ -464,6 +469,48 @@ public class Logic implements IGameHandler {
     }
     return false;
   }
+  public Move get_good_move(ArrayList<Move> moves)
+  {
+    for (Move m: moves)
+    {
+      int distance = GameRuleLogic.calculateMoveDistance(board, m.x, m.y, m.direction);
+      Field destination = GameRuleLogic.getFieldInDirection(board, m.x, m.y, m.direction, distance);
+      for(int k = destination.getX() - 1; k < destination.getX() + 1; k++)
+      {
+        for(int i = destination.getY() - 1; i < destination.getY() + 1; i++)
+        {
+          try
+          {
+            FieldState f = board.getField(k, i).getState();
+            if(gameState.getCurrentPlayerColor() == PlayerColor.BLUE)
+            {
+              if (f == FieldState.BLUE) {
+                return m;
+              }
+            }
+            else
+            {
+              if(f == FieldState.RED)
+              {
+                return m;
+              }
+            }
+
+          }
+          catch (Exception e)
+          {
+
+          }
+
+        }
+      }
+
+    }
+    Random rand = new Random();
+    return moves.get(rand.nextInt(moves.size()));
+
+  }
+
   public Move early_game_move(){
 
     int position = 5;
@@ -479,8 +526,8 @@ public class Logic implements IGameHandler {
             ArrayList<Move> m = getMovetoField(f);
             if (m.size() > 0) {
               moveFound = !moveFound;
-              Random rand = new Random();
-              return m.get(rand.nextInt(m.size()));
+
+              return get_good_move(m);
 
            }
           }
