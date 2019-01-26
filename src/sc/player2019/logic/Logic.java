@@ -28,7 +28,7 @@ import java.util.*;
  */
 public class Logic implements IGameHandler {
 
-    private Starter client;
+    private final Starter client;
     private GameState gameState;
     private Player currentPlayer;
     private Board board;
@@ -41,10 +41,10 @@ public class Logic implements IGameHandler {
     private static final String ANSI_CYAN = "\u001B[36m";
 
 
-    final int midgamemyswarm = 4;
-    final int midgameopsswarm = 1;
-    final int endgamemyswarm = 4;
-    final int endgameopsswarm = 1;
+    private final int midgamemyswarm = 4;
+    private final int midgameopsswarm = 1;
+    private final int endgamemyswarm = 4;
+    private final int endgameopsswarm = 1;
 
     private static final Logger log = LoggerFactory.getLogger(Logic.class);
 
@@ -124,7 +124,7 @@ public class Logic implements IGameHandler {
 
 
     //Gibt Spielfeld als int Array zurück
-    int[][] getBoard(Board useboard) {
+    private int[][] getBoard(Board useboard) {
         try {
             int[][] field = new int[10][10];
             for (int i = 0; i <= 9; i++) {
@@ -153,14 +153,10 @@ public class Logic implements IGameHandler {
 
     //Gibt den Zug zurück der gemacht werden soll
     private Move getsendmove(ArrayList<Move> possibleMoves, int turn) {
-
-        ArrayList test = new ArrayList();
-
-
-        if (turn < 10) {
+        if (turn < 15) {
             log.error("Early Game");
             return early_game_move();
-        } else if (turn < 30) {
+        } else /*if (turn < 30) */{
             log.error("Mid Game");
             //Mid Game Logic
             int[] moveints = new int[possibleMoves.size()];
@@ -168,9 +164,10 @@ public class Logic implements IGameHandler {
                 moveints[i] = evaluateMove_midGame(possibleMoves.get(i));
             }
             int bestmove = search(moveints, moveints.length);
-
+            printMoveswithValues(moveints,possibleMoves);
+            log.error("Done Move: " + possibleMoves.get(bestmove));
             return possibleMoves.get(bestmove);
-        } else {
+        } /*else {
             log.error("late Game");
             //late Game Logic
             int[] moveints = new int[possibleMoves.size()];
@@ -178,8 +175,10 @@ public class Logic implements IGameHandler {
                 moveints[i] = evaluateMove(possibleMoves.get(i));
             }
             int bestmove = search(moveints, moveints.length);
+            printMoveswithValues(moveints,possibleMoves);
+            log.error("Done Move: " + possibleMoves.get(bestmove));
             return possibleMoves.get(bestmove);
-        }
+        }*/
 
     }
 
@@ -322,7 +321,7 @@ public class Logic implements IGameHandler {
 
 
     //Testen ob jemand Gewonnen hat in hypothetischem GameState
-    public WinCondition checkWinCondition(GameState gameState1) {
+    private WinCondition checkWinCondition(GameState gameState1) {
         int[][] stats = gameState1.getGameStats();
         if (gameState1.getTurn() % 2 == 1) {
             return null;
@@ -386,15 +385,18 @@ public class Logic implements IGameHandler {
         int j = 0;
         for (int i = 0; i < n; i++) {
 
-            if (arr[i] > s)
+            if (arr[i] > s){
                 s = arr[i];
-            j = i;
+                j = i;
+            }
         }
 
         return j;
     }
 
-    public static Set<Field> größterSchwarm(Board board, PlayerColor player) {
+
+    //Gibr den Größten Schwarm in der Mitte zurück
+    private static Set<Field> größterSchwarm(Board board, PlayerColor player) {
         Set<Field> occupiedFields = GameRuleLogic.getOwnFields(board, player);
         Set<Field> returnFields = new HashSet<>();
         Set<Field> falseFields = new HashSet<>();
@@ -482,7 +484,7 @@ public class Logic implements IGameHandler {
         return false;
     }
 
-    public Move get_good_move(ArrayList<Move> moves) {
+    private Move get_good_move(ArrayList<Move> moves) {
         for (Move m : moves) {
             int distance = GameRuleLogic.calculateMoveDistance(board, m.x, m.y, m.direction);
             Field destination = GameRuleLogic.getFieldInDirection(board, m.x, m.y, m.direction, distance);
@@ -517,7 +519,7 @@ public class Logic implements IGameHandler {
 
     }
 
-    public Move early_game_move() {
+    private Move early_game_move() {
 
         int position = 5;
 
@@ -560,6 +562,15 @@ public class Logic implements IGameHandler {
             }
         }
         return returnSet;
+    }
+
+    private void printMoveswithValues(int[] moveints, ArrayList<Move> moves){
+        for (int i = 0;i<moves.size() ; i++) {
+            System.out.print(moves.get(i));
+            System.out.print("; ");
+            System.out.print(moveints[i]);
+            System.out.print("\n");
+        }
     }
 
 }
