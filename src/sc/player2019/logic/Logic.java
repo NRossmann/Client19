@@ -253,17 +253,19 @@ public class Logic implements IGameHandler {
     int opswarmafter = größterSchwarm(gameState1.getBoard(), gameState.getOtherPlayerColor()).size();
 
     //Prüfen ob sich mein Schwarm vergößert hat
-    if (swarmafter > swarmbefore) {
-      moveint += ((swarmafter - swarmbefore) * (swarmafter - swarmbefore)) * midgamemyswarm;
+      int moveint1 = ((swarmafter - swarmbefore) * (swarmafter - swarmbefore)) * midgamemyswarm;
+      if (swarmafter > swarmbefore) {
+      moveint += moveint1;
     } else {
-      moveint -= ((swarmafter - swarmbefore) * (swarmafter - swarmbefore)) * midgamemyswarm;
+      moveint -= moveint1;
     }
 
     //Prüfen ob sich der Schwarm des Gegners vergrößert hat
-    if (opswarmafter > opswarmbefore) {
-      moveint -= ((opswarmafter - opswarmbefore) * (opswarmafter - opswarmbefore) * midgameopsswarm);
+      int moveint2 = (opswarmafter - opswarmbefore) * (opswarmafter - opswarmbefore) * midgameopsswarm;
+      if (opswarmafter > opswarmbefore) {
+      moveint -= moveint2;
     } else {
-      moveint += ((opswarmafter - opswarmbefore) * (opswarmafter - opswarmbefore) * midgameopsswarm);
+      moveint += moveint2;
     }
 
     return moveint;
