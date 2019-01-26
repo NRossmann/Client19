@@ -159,7 +159,7 @@ public class Logic implements IGameHandler {
 
     if (turn < 10) {
       log.error("Early Game");
-      return early_game_move();
+      return early_game_move(possibleMoves);
     } else /*if (turn < 30)*/ {
       log.error("Mid Game");
       //Mid Game Logic
@@ -518,33 +518,142 @@ public class Logic implements IGameHandler {
 
   }
 
-  public Move early_game_move() {
+    public boolean check_use(Move move)
+    {
+        int distance = GameRuleLogic.calculateMoveDistance(board, move.x, move.y, move.direction);
+        Field field = GameRuleLogic.getFieldInDirection(board, move.x, move.y, move.direction, distance);
 
-    int position = 5;
+        if (Math.abs(field.getX()- 5) < Math.abs(move.x-5) &&  Math.abs(field.getY()-5) <= Math.abs(move.y-5) || Math.abs(field.getY()-5) < Math.abs(move.y-5) && Math.abs(field.getX()- 5) <= Math.abs(move.x-5))
+        {
 
-    int runde = 0;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    //gibt aus einem Array gegebener Züge die Züge zurück die Auf ein gegenes Feld führen
+    public ArrayList<Move> get_Move_to_Field(Field field, ArrayList<Move> moves)
+    {
 
-    boolean moveFound = false;
-    while (!moveFound) {
-      for (int i = position - runde; i <= position; i++) {
-        for (int j = position - runde; j <= position + runde; j++) {
+        ArrayList<Move> return_moves = new ArrayList();
+        for(Move m: moves) {
+            int distance = GameRuleLogic.calculateMoveDistance(board, m.x, m.y, m.direction);
+            Field destination = GameRuleLogic.getFieldInDirection(board, m.x, m.y, m.direction, distance);
 
-          Field f = new Field(i, j);
-          ArrayList<Move> m = getMovetoField(f);
-          if (m.size() > 0) {
-            moveFound = !moveFound;
+            if(destination.getX() == field.getX() && destination.getY() == field.getY())
+            {
+                return_moves.add(m);
+            }
+        }
+        return return_moves;
+    }
 
-            return get_good_move(m);
+    // gibt den besten Zug fürs earlygame zurück
+    public Move early_game_move(ArrayList<Move> possiblemoves)
+    {
+        ArrayList moves = sort_paring_moves(possiblemoves);
 
-          }
+        if (moves.size() == 0) {moves = possiblemoves; System.out.println("warning");}
+        System.out.println(moves.toString());
+
+        int position = 4;
+        int runde = 0;
+
+        boolean moveFound = false;
+        ArrayList<Move> final_moves = new ArrayList();
+        while(runde < 5)
+        {
+            for (int i = position - runde; i <= position + 1 + runde; i++)
+            {
+                for (int j = position - runde; j <= position + 1 + runde; j++)
+                {
+
+
+                    Field f = board.getField(i, j);
+                    final_moves.addAll(get_Move_to_Field(f, moves));
+                }
+            }
+            if (final_moves.size() > 0)
+            {
+
+                moveFound = !moveFound;
+                Random rand = new Random();
+                return final_moves.get(rand.nextInt(final_moves.size()));
+            }
+            runde++;
+        }
+        return null;
+    }
+    // überprüft ob der zug auf ein Feld in die Ecken geht und verhinder das in sort_paring_moves() das Ursprungsfeld als Partnerfeld betrachtet wird
+    public boolean check_sites(Field f,Field field, int x, int y)
+    {
+        if (f.getX() == 0 && f.getY() == 0 || f.getX() == 0 && f.getY() == 9 || f.getX() == 9 && f.getY() == 0 || f.getX() == 9 && f.getY() == 9 || field.getX() == x && field.getY() == y)
+        {
+            return false;
+        }
+        else {return true;}
+    }
+    // verhindert das ein pirania in seinem Schwarm "umher hüpft"
+    public boolean check_turn(ArrayList<Field> fields, int x, int y, Field destination)
+    {
+        for (Field field: fields)
+        {
+            if(field.getY() == y && field.getX() == x)
+            {
+                return false;
+            }
+        }
+        //if(destination.getX()-5 )
+        return true;
+    }
+    //gibt aus allen möglichen zügen eine ArrayList mit zügen bei denen ein Nachbarfisch vorhanden ist
+    public ArrayList<Move> sort_paring_moves(ArrayList<Move> possiblemoves){
+
+        ArrayList<Move> paring_moves = new ArrayList();
+        ArrayList<Field> used_piranias = new ArrayList();
+        for (Move m: possiblemoves)
+        {
+            // berechnung des Zielfeldes
+            int distance = GameRuleLogic.calculateMoveDistance(board, m.x, m.y, m.direction);
+            Field destination = GameRuleLogic.getFieldInDirection(board, m.x, m.y, m.direction, distance);
+
+            // berechnet die Nachbarfelder des Zielfeldes
+            for(int k = destination.getX() - 1; k < destination.getX() + 1; k++)
+            {
+                for(int i = destination.getY() - 1; i < destination.getY() + 1; i++)
+                {
+                    //überprüft ob auf dem Nachbarfeld ein Fischder gleichen Farbe ist
+                    try
+                    {
+                        Field field = board.getField(k, i);
+                        FieldState f = field.getState();
+                        if(gameState.getCurrentPlayerColor() == PlayerColor.BLUE)
+                        {
+                            if (f == FieldState.BLUE && check_sites(destination,field, m.x, m.y)  && check_use(m) ){
+                                paring_moves.add(m);
+                                used_piranias.add(destination);
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            if(f == FieldState.RED && check_sites(destination,field, m.x, m.y) && check_use(m) )
+                            {
+                                paring_moves.add(m);
+                                used_piranias.add(destination);
+                                break;
+                            }
+                        }
+                    }
+                    catch (Exception e){}
+                }
+            }
         }
 
-      }
-
-      runde++;
+        return paring_moves;
     }
-    return null;
-  }
 
   private static Set<Field> getDirectNeighbour(Board board, Field f) {
     Set<Field> returnSet = new HashSet<>();
