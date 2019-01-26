@@ -148,7 +148,7 @@ public class Logic implements IGameHandler {
 
   //Gibt den Zug zurück der gemacht werden soll
   private Move getsendmove(ArrayList<Move> possibleMoves, int turn) {
-    if (turn < 10) {
+    if (turn < 5) {
       log.error("Early Game");
       return early_game_move(possibleMoves);
     } else /*if (turn < 30)*/ {
@@ -256,6 +256,7 @@ public class Logic implements IGameHandler {
       int moveint1 = ((swarmafter - swarmbefore) * (swarmafter - swarmbefore)) * midgamemyswarm;
       if (swarmafter > swarmbefore) {
       moveint += moveint1;
+      moveint += guteVerbindung(gameState1.getBoard(),move, currentPlayer.getColor())*10;
     } else {
       moveint -= moveint1;
     }
@@ -268,17 +269,37 @@ public class Logic implements IGameHandler {
       moveint += moveint2;
     }
 
+
+
+
     return moveint;
   }
 
+    private int guteVerbindung(Board board, Move move, PlayerColor currentplayercolor) {
+        int outval = 0;
+        Field field = movetoField(board,move);
+        Set<Field> neighbours = controller.getDirectNeighbour(board,field);
+        for (Field f : neighbours){
+            if (currentplayercolor == PlayerColor.BLUE){
+                if (f.getState() == FieldState.BLUE){
+                    outval++;
+                }
+            }else{
+                if (f.getState() == FieldState.RED){
+                    outval++;
+                }
+            }
+        }
+        return outval;
+    }
+
+    private Field movetoField(Board board, Move move){
+      int distance = GameRuleLogic.calculateMoveDistance(board,move.x,move.y,move.direction);
+      return GameRuleLogic.getFieldInDirection(board,move.x,move.y,move.direction,distance);
+    }
 
 
-
-
-
-
-
-  public Set<Field> größterSchwarm(Board board, PlayerColor player) {
+    public Set<Field> größterSchwarm(Board board, PlayerColor player) {
     Set<Field> occupiedFields = GameRuleLogic.getOwnFields(board, player);
     Set<Field> returnFields = new HashSet<>();
     Set<Field> falseFields = new HashSet<>();
