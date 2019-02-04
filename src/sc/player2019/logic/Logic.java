@@ -36,8 +36,9 @@ public class Logic implements IGameHandler {
 
 
 
-  final int midgamemyswarm = 4;
+  final int midgamemyswarm = 10;
   final int midgameopsswarm = 1;
+  final int midgameVerbindung = 5;
   final int endgamemyswarm = 4;
   final int endgameopsswarm = 1;
 
@@ -151,181 +152,21 @@ public class Logic implements IGameHandler {
     if (turn < 5) {
       log.error("Early Game");
       return early_game_move(possibleMoves);
-    } else /*if (turn < 30)*/ {
+    } else  {
       log.error("Mid Game");
       //Mid Game Logic
       int[] moveints = new int[possibleMoves.size()];
       for (int i = 0; i < possibleMoves.size(); i++) {
-        moveints[i] = evaluateMove_midGame(possibleMoves.get(i));
+        moveints[i] = new SimulatedMove(possibleMoves.get(i),gameState,0).evaluate();
       }
       int bestmove = controller.search(moveints, moveints.length);
-
+      controller.printMoveswithValues(moveints);
       return possibleMoves.get(bestmove);
-    }/* else {
-            log.error("late Game");
-            //late Game Logic
-            int[] moveints = new int[possibleMoves.size()];
-            for (int i = 0; i < possibleMoves.size(); i++) {
-                moveints[i] = evaluateMove(possibleMoves.get(i));
-            }
-            int bestmove = search(moveints, moveints.length);
-            return possibleMoves.get(bestmove);
-        }*/
+    }
 
   }
 
 
-  //TODO: Warum so Schlechte ergebnisse???
-
-  // Weist jedem Zug einen Wert je nach seiner Nützlichkeit zu
-  private int evaluateMove(Move move) {
-    //Neues Game State Objekt
-    GameState gameState1;
-    //Rückgabe Variable
-    int moveint = 0;
-
-    //Schwarm größen vor dem Zug
-    int swarmbefore = GameRuleLogic.greatestSwarmSize(gameState.getBoard(), currentPlayer.getColor());
-    int opswarmbefore = GameRuleLogic.greatestSwarmSize(gameState.getBoard(), gameState.getOtherPlayerColor());
-
-    //Zug hypothetisch durchführen
-    gameState1 = controller.domove(move);
-
-    //Prüfen ob jemand gewonnen hat
-    WinCondition winCondition = controller.checkWinCondition(gameState1);
-    if (winCondition != null) {
-      PlayerColor winnercolor = winCondition.getWinner();
-      if (winnercolor == currentPlayer.getColor()) {
-        return 1000;
-      } else {
-        return -1000;
-      }
-    }
-
-    //Schwarm größen nach dem Zug
-    int swarmafter = GameRuleLogic.greatestSwarmSize(gameState1.getBoard(), currentPlayer.getColor());
-    int opswarmafter = GameRuleLogic.greatestSwarmSize(gameState1.getBoard(), gameState1.getOtherPlayerColor());
-
-    //Prüfen ob sich mein Schwarm vergößert hat
-    if (swarmafter > swarmbefore) {
-      moveint += ((swarmafter - swarmbefore) * (swarmafter - swarmbefore)) * endgamemyswarm;
-    } else {
-      moveint -= ((swarmafter - swarmbefore) * (swarmafter - swarmbefore)) * endgamemyswarm;
-    }
-
-    //Prüfen ob sich der Schwarm des Gegners vergrößert hat
-    if (opswarmafter > opswarmbefore) {
-      moveint -= ((opswarmafter - opswarmbefore) * (opswarmafter - opswarmbefore) * endgameopsswarm);
-    } else {
-      moveint += ((opswarmafter - opswarmbefore) * (opswarmafter - opswarmbefore) * endgameopsswarm);
-    }
-
-    return moveint;
-  }
-
-  //Mid Game Evaluate
-  private int evaluateMove_midGame(Move move) {
-    //Neues Game State Objekt
-    GameState gameState1;
-    //Rückgabe Variable
-    int moveint = 0;
-
-    //Schwarm größen vor dem Zug
-    int swarmbefore = größterSchwarm(gameState.getBoard(), currentPlayer.getColor()).size();
-    int opswarmbefore = größterSchwarm(gameState.getBoard(), gameState.getOtherPlayerColor()).size();
-
-    //Zug hypothetisch durchführen
-    gameState1 = controller.domove(move);
-
-    //Prüfen ob jemand gewonnen hat
-    WinCondition winCondition = controller.checkWinCondition(gameState1);
-    if (winCondition != null) {
-      PlayerColor winnercolor = winCondition.getWinner();
-      if (winnercolor == currentPlayer.getColor()) {
-        return 1000;
-      } else {
-        return -1000;
-      }
-    }
-
-    //Schwarm größen nach dem Zug
-    int swarmafter = größterSchwarm(gameState1.getBoard(), currentPlayer.getColor()).size();
-    int opswarmafter = größterSchwarm(gameState1.getBoard(), gameState.getOtherPlayerColor()).size();
-
-    //Prüfen ob sich mein Schwarm vergößert hat
-      int moveint1 = ((swarmafter - swarmbefore) * (swarmafter - swarmbefore)) * midgamemyswarm;
-      if (swarmafter > swarmbefore) {
-      moveint += moveint1;
-      moveint += guteVerbindung(gameState1.getBoard(),move, currentPlayer.getColor())*10;
-    } else {
-      moveint -= moveint1;
-    }
-
-    //Prüfen ob sich der Schwarm des Gegners vergrößert hat
-      int moveint2 = (opswarmafter - opswarmbefore) * (opswarmafter - opswarmbefore) * midgameopsswarm;
-      if (opswarmafter > opswarmbefore) {
-      moveint -= moveint2;
-    } else {
-      moveint += moveint2;
-    }
-
-
-
-
-    return moveint;
-  }
-
-    private int guteVerbindung(Board board, Move move, PlayerColor currentplayercolor) {
-        int outval = 0;
-        Field field = movetoField(board,move);
-        Set<Field> neighbours = controller.getDirectNeighbour(board,field);
-        for (Field f : neighbours){
-            if (currentplayercolor == PlayerColor.BLUE){
-                if (f.getState() == FieldState.BLUE){
-                    outval++;
-                }
-            }else{
-                if (f.getState() == FieldState.RED){
-                    outval++;
-                }
-            }
-        }
-        return outval;
-    }
-
-    private Field movetoField(Board board, Move move){
-      int distance = GameRuleLogic.calculateMoveDistance(board,move.x,move.y,move.direction);
-      return GameRuleLogic.getFieldInDirection(board,move.x,move.y,move.direction,distance);
-    }
-
-
-    public Set<Field> größterSchwarm(Board board, PlayerColor player) {
-    Set<Field> occupiedFields = GameRuleLogic.getOwnFields(board, player);
-    Set<Field> returnFields = new HashSet<>();
-    Set<Field> falseFields = new HashSet<>();
-
-
-    for (Field f : occupiedFields) {
-      if (f.getX() != 0 && f.getY() != 0 && f.getX() != 9 && f.getY() != 9) {
-        returnFields.add(f);
-      } else {
-        falseFields.add(f);
-      }
-    }
-    Set<Field> innerswarmSet = GameRuleLogic.greatestSwarm(board, returnFields);
-    Field[] innerswarm = new Field[innerswarmSet.size()];
-    int i = 0;
-    for (Field f : innerswarmSet) {
-      innerswarm[i]=f;
-      i++;
-    }
-    Set<Field> swarm = GameRuleLogic.greatestSwarm(board, returnFields);
-    for (i = 0; i < innerswarm.length; i++) {
-      Set<Field> neighbours = controller.getDirectNeighbour(board, innerswarm[i]);
-      swarm.addAll(neighbours);
-    }
-    return GameRuleLogic.greatestSwarm(board, swarm);
-  }
 
 
     public boolean check_use(Move move)

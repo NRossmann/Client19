@@ -184,4 +184,15 @@ public class Controller {
         }
         else {return true;}
     }
+
+    public void printMoveswithValues(int[] values){
+        int i = 0;
+        for (Move m : possibleMoves){
+            System.out.print(m);
+            System.out.print(", ");
+            System.out.print(values[i]);
+            System.out.print("\n");
+            i++;
+        }
+    }
 }
