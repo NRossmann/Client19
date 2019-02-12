@@ -9,6 +9,7 @@ import sc.plugin2019.*;
 import sc.plugin2019.util.Constants;
 import sc.plugin2019.util.GameRuleLogic;
 import sc.shared.GameResult;
+import sc.shared.InvalidMoveException;
 import sc.shared.PlayerColor;
 import sc.shared.WinCondition;
 
@@ -62,7 +63,7 @@ public class Logic implements IGameHandler {
     log.info("Error Message: " + errorMessage);
     log.info("Winner: " + data.getWinners());
     log.info(currentPlayer.getColor().toString());
-
+    log.warn("Züge!!: "+gameState.getTurn());
   }
   Controller controller;
   /**
@@ -163,38 +164,71 @@ public class Logic implements IGameHandler {
 
   private Move calculatebestMove(int folgezüge, ArrayList<Move> possibleMoves){
       //Die nächsten Züge berechnen
+      log.error(gameState.toString());
       ArrayList<MovewithValue> moveswithvalues = new ArrayList<>();
       ArrayList<MovewithValue> sorted = null;
       for (int i = 0; i < possibleMoves.size(); i++) {
         SimulatedMove simMove = new SimulatedMove(possibleMoves.get(i),gameState);
-        int value = simMove.evaluate();
-        moveswithvalues.add(new MovewithValue(possibleMoves.get(i),value,simMove.getGameStatefterMove()));
+        moveswithvalues.add(simMove.evaluate());
       }
+    logarraylis(moveswithvalues);
       sorted = controller.sort(moveswithvalues);
-
+    logarraylis(sorted);
       //Nachfolgende Züge berechnen
       if (folgezüge != 0){
+          ArrayList<MovewithValue> totest = new ArrayList<>();
+          for (int j = sorted.size()-1; j < sorted.size()-6; j--) {
+              totest.add(sorted.get(j));
+          }
           for (int i = 0; i < folgezüge; i++){
-              ArrayList<MovewithValue> totest = new ArrayList<>();
-              for (int j = 0; j < 5; j++) {
-                  totest.add(sorted.get(j));
-              }
 
-              for (MovewithValue m : totest){
-                   ArrayList<Move> possibleMovesfortest = GameRuleLogic.getPossibleMoves(m.gameState);
+                log.error(totest.toString());
+              for (int k = 0; k < totest.size(); k++){
+                   ArrayList<Move> possibleMovesfortest = GameRuleLogic.getPossibleMoves(totest.get(k).gameState);
+                   log.warn(possibleMovesfortest.toString());
                    for (Move move : possibleMovesfortest){
-                       SimulatedMove simMove = new SimulatedMove(possibleMovesfortest.get(i),m.gameState);
-                       int value = simMove.evaluate();
-                       m.value += value;
-                       m.gameState = simMove.getGameStatefterMove();
+                       totest.get(k).newMove(move);
+                       SimulatedMove simMove = new SimulatedMove(move,totest.get(k).gameState);
+                       MovewithValue movewithValue = simMove.evaluate();
+                       totest.get(k).newValueandGamestate(movewithValue.value,movewithValue.gameState);
                    }
               }
-              sorted = controller.sort(totest);
+              totest = controller.sort(totest);
 
           }
       }
-      return sorted.get(sorted.size()-1).move;
+      return sorted.get(sorted.size()-1).testmove;
   }
+    void logarraylis(ArrayList<MovewithValue> mo){
+      StringBuilder builder = new StringBuilder();
+      builder.append("Values: ");
+      for (MovewithValue m : mo){
+          builder.append(m.value);
+          builder.append(", ");
+      }
+      log.warn(builder.toString());
+    }
+
+    public static ArrayList<Move> getPossibleMoves(GameState state) {
+        ArrayList<Move> possibleMoves = new ArrayList<Move>();
+        Collection<Field> fields = GameRuleLogic.getOwnFields(state.getBoard(), state.getCurrentPlayerColor());
+        for (Field field : fields) {
+            for (Direction direction : Direction.values()) {
+                int x = field.getX();
+                int y = field.getY();
+                int dist = GameRuleLogic.calculateMoveDistance(state.getBoard(), x, y, direction);
+                try {
+                    if (dist > 0 && GameRuleLogic.isValidToMove(state, x, y, direction, dist)) {
+                        Move m = new Move(x, y, direction);
+                        possibleMoves.add(m);
+                    }
+                } catch (InvalidMoveException ignore) {
+                }
+
+            }
+        }
+        return possibleMoves;
+    }
 
 
 

@@ -1,5 +1,7 @@
 package sc.player2019.logic;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import sc.framework.plugins.Player;
 import sc.plugin2019.*;
 import sc.plugin2019.util.Constants;
@@ -22,6 +24,7 @@ public class SimulatedMove {
     Player currentPlayer;
     Player opponent;
     GameState afterMove;
+    Logger log;
 
     final int midgamemyswarm = 5;
     final int midgameopsswarm = 1;
@@ -29,6 +32,7 @@ public class SimulatedMove {
 
 
     public SimulatedMove(Move move, GameState gameState) {
+        log = LoggerFactory.getLogger(SimulatedMove.class);
         this.move = move;
         this.gameState = gameState;
         this.board = gameState.getBoard();
@@ -36,7 +40,7 @@ public class SimulatedMove {
         this.opponent = gameState.getOpponent(currentPlayer);
     }
 
-    public int evaluate() {
+    public MovewithValue evaluate() {
         //Neues Game State Objekt
         GameState gameState1;
         //Rückgabe Variable
@@ -54,9 +58,9 @@ public class SimulatedMove {
         if (winCondition != null) {
             PlayerColor winnercolor = winCondition.getWinner();
             if (winnercolor == currentPlayer.getColor()) {
-                return 2147483647;
+                return new MovewithValue(this.move,Integer.MAX_VALUE,gameState1);
             } else {
-                return -2147483647;
+                return new MovewithValue(this.move,Integer.MIN_VALUE,gameState1);
             }
         }
 
@@ -80,11 +84,10 @@ public class SimulatedMove {
         } else {
             moveint += moveint2;
         }
-            return moveint;
+        return new MovewithValue(this.move,moveint,gameState1);
 
     }
 
-    public GameState getGameStatefterMove(){return afterMove;}
 
     public Set<Field> größterSchwarm(Board board, PlayerColor player) {
         Set<Field> occupiedFields = GameRuleLogic.getOwnFields(board, player);
@@ -157,28 +160,18 @@ public class SimulatedMove {
     //Zug simuliert durchführen
     public GameState domove(Move move) {
         GameState gameState1 = gameState.clone();
+//        log.error(gameState1.toString());
         try {
-            perform(gameState1, move);
+            gameState1 = perform(gameState1, move);
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+//        log.error(gameState1.toString());
         return gameState1;
     }
 
-    //Suche nach dem höchsten Wert
-    public int search(int[] arr, int n) {
-        int s = 0;
-        int j = 0;
-        for (int i = 0; i < n; i++) {
 
-            if (arr[i] > s){
-                s = arr[i];
-                j = i;
-            }
-        }
-
-        return j;
-    }
 
     //Testen ob jemand Gewonnen hat in hypothetischem GameState
     public WinCondition checkWinCondition(GameState gameState1) {
@@ -239,9 +232,9 @@ public class SimulatedMove {
         }
     }
 
-    public void perform(GameState state, Move move) throws InvalidMoveException, InvalidGameStateException {
+    public GameState perform(GameState state, Move move) throws InvalidMoveException, InvalidGameStateException {
         int distance = calculateMoveDistance(state.getBoard(), move.x, move.y, move.direction);
-        if (isValidToMove(state, move.x, move.y, move.direction, distance)) {
+        if (GameRuleLogic.isValidToMove(state, move.x, move.y, move.direction, distance)) {
             Field start = state.getField(move.x, move.y);
             Field destination = getFieldInDirection(state.getBoard(), move.x, move.y, move.direction, distance);
             start.setState(FieldState.EMPTY);
@@ -252,5 +245,7 @@ public class SimulatedMove {
         state.setLastMove(move);
         state.setTurn(state.getTurn() + 1);
         state.switchCurrentPlayer();
+        return state;
     }
+
 }

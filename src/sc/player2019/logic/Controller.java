@@ -144,30 +144,48 @@ public class Controller {
     }
 
 
-    //Suche nach dem höchsten Wert
-    public ArrayList<MovewithValue> sort(ArrayList<MovewithValue> tosort) {
-        int n = tosort.size();
-        int i, j, k, h;
-        MovewithValue t;
-        int[] cols = {1391376, 463792, 198768, 86961, 33936,
-                13776, 4592, 1968, 861, 336, 112, 48, 21, 7, 3, 1};
+//    //Suche nach dem höchsten Wert
+//    public ArrayList<MovewithValue> sort(ArrayList<MovewithValue> tosort) {
+//        int n = tosort.size();
+//        int i, j, k, h;
+//        MovewithValue t;
+//        int[] cols = {1391376, 463792, 198768, 86961, 33936,
+//                13776, 4592, 1968, 861, 336, 112, 48, 21, 7, 3, 1};
+//
+//        for (k=0; k<16; k++)
+//        {
+//            h=cols[k];
+//            for (i=h; i<n; i++)
+//            {
+//                j=i;
+//                t=tosort.get(j);
+//                while (j>=h &&tosort.get(j-h).value > t.value)
+//                {
+//                    tosort.set(j,tosort.get(j-h));
+//                    j=j-h;
+//                }
+//                tosort.set(j,t);
+//            }
+//        }
+//        return tosort;
 
-        for (k=0; k<16; k++)
-        {
-            h=cols[k];
-            for (i=h; i<n; i++)
-            {
-                j=i;
-                t=tosort.get(j);
-                while (j>=h &&tosort.get(j-h).value > t.value)
-                {
-                    tosort.set(j,tosort.get(j-h));
-                    j=j-h;
+
+    public  ArrayList<MovewithValue> sort(ArrayList<MovewithValue> tosort){
+        for (int i = 1; i <= tosort.size() ; i++) {
+            for (int j = 0; j<tosort.size()-i ; j++) {
+                if (tosort.get(j).value > tosort.get(j+1).value){
+                    swap(tosort,j,j+1);
                 }
-                tosort.set(j,t);
             }
         }
         return tosort;
+    }
+
+    private ArrayList<MovewithValue> swap(ArrayList<MovewithValue> toswap,int i1, int i2){
+        MovewithValue zw = toswap.get(i1);
+        toswap.set(i1,toswap.get(i2));
+        toswap.set(i2,zw);
+        return toswap;
     }
 
     public Set<Field> getDirectNeighbour(Board board, Field f) {
