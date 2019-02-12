@@ -7,6 +7,7 @@ import sc.plugin2019.util.GameRuleLogic;
 import sc.shared.PlayerColor;
 import sc.shared.WinCondition;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -144,18 +145,29 @@ public class Controller {
 
 
     //Suche nach dem höchsten Wert
-    public int search(int[] arr, int n) {
-        int s = 0;
-        int j = 0;
-        for (int i = 0; i < n; i++) {
+    public ArrayList<MovewithValue> sort(ArrayList<MovewithValue> tosort) {
+        int n = tosort.size();
+        int i, j, k, h;
+        MovewithValue t;
+        int[] cols = {1391376, 463792, 198768, 86961, 33936,
+                13776, 4592, 1968, 861, 336, 112, 48, 21, 7, 3, 1};
 
-            if (arr[i] > s){
-                s = arr[i];
-                j = i;
+        for (k=0; k<16; k++)
+        {
+            h=cols[k];
+            for (i=h; i<n; i++)
+            {
+                j=i;
+                t=tosort.get(j);
+                while (j>=h &&tosort.get(j-h).value > t.value)
+                {
+                    tosort.set(j,tosort.get(j-h));
+                    j=j-h;
+                }
+                tosort.set(j,t);
             }
         }
-
-        return j;
+        return tosort;
     }
 
     public Set<Field> getDirectNeighbour(Board board, Field f) {
@@ -185,14 +197,12 @@ public class Controller {
         else {return true;}
     }
 
-    public void printMoveswithValues(int[] values){
-        int i = 0;
-        for (Move m : possibleMoves){
-            System.out.print(m);
-            System.out.print(", ");
-            System.out.print(values[i]);
-            System.out.print("\n");
-            i++;
+    public void printMoveswithValues(ArrayList<MovewithValue> moveswithvalues){
+        for (MovewithValue m : moveswithvalues){
+            println(m.toString());
         }
     }
+
+    private void println(String n){System.out.println(n);}
+    private void print(String n){System.out.print(n);}
 }

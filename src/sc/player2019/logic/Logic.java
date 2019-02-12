@@ -155,15 +155,45 @@ public class Logic implements IGameHandler {
     } else  {
       log.error("Mid Game");
       //Mid Game Logic
-      int[] moveints = new int[possibleMoves.size()];
-      for (int i = 0; i < possibleMoves.size(); i++) {
-        moveints[i] = new SimulatedMove(possibleMoves.get(i),gameState,0).evaluate();
-      }
-      int bestmove = controller.search(moveints, moveints.length);
-      controller.printMoveswithValues(moveints);
-      return possibleMoves.get(bestmove);
+      return calculatebestMove(2,possibleMoves);
+
     }
 
+  }
+
+  private Move calculatebestMove(int folgezüge, ArrayList<Move> possibleMoves){
+      //Die nächsten Züge berechnen
+      ArrayList<MovewithValue> moveswithvalues = new ArrayList<>();
+      ArrayList<MovewithValue> sorted = null;
+      for (int i = 0; i < possibleMoves.size(); i++) {
+        SimulatedMove simMove = new SimulatedMove(possibleMoves.get(i),gameState);
+        int value = simMove.evaluate();
+        moveswithvalues.add(new MovewithValue(possibleMoves.get(i),value,simMove.getGameStatefterMove()));
+      }
+      sorted = controller.sort(moveswithvalues);
+
+      //Nachfolgende Züge berechnen
+      if (folgezüge != 0){
+          for (int i = 0; i < folgezüge; i++){
+              ArrayList<MovewithValue> totest = new ArrayList<>();
+              for (int j = 0; j < 5; j++) {
+                  totest.add(sorted.get(j));
+              }
+
+              for (MovewithValue m : totest){
+                   ArrayList<Move> possibleMovesfortest = GameRuleLogic.getPossibleMoves(m.gameState);
+                   for (Move move : possibleMovesfortest){
+                       SimulatedMove simMove = new SimulatedMove(possibleMovesfortest.get(i),m.gameState);
+                       int value = simMove.evaluate();
+                       m.value += value;
+                       m.gameState = simMove.getGameStatefterMove();
+                   }
+              }
+              sorted = controller.sort(totest);
+
+          }
+      }
+      return sorted.get(sorted.size()-1).move;
   }
 
 

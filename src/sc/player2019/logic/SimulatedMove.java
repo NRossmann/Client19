@@ -21,20 +21,19 @@ public class SimulatedMove {
     Board board;
     Player currentPlayer;
     Player opponent;
-    int folgezüge;
+    GameState afterMove;
 
-    final int midgamemyswarm = 10;
-    final int midgameopsswarm = 3;
-    final int midgameVerbindung = 7;
+    final int midgamemyswarm = 5;
+    final int midgameopsswarm = 1;
+    final int midgameVerbindung = 3;
 
 
-    public SimulatedMove(Move move, GameState gameState, int folgezüge) {
+    public SimulatedMove(Move move, GameState gameState) {
         this.move = move;
         this.gameState = gameState;
         this.board = gameState.getBoard();
         this.currentPlayer = gameState.getCurrentPlayer();
         this.opponent = gameState.getOpponent(currentPlayer);
-        this.folgezüge = folgezüge;
     }
 
     public int evaluate() {
@@ -49,7 +48,7 @@ public class SimulatedMove {
 
         //Zug hypothetisch durchführen
         gameState1 = domove(move);
-
+        afterMove = gameState1;
         //Prüfen ob jemand gewonnen hat
         WinCondition winCondition = checkWinCondition(gameState1);
         if (winCondition != null) {
@@ -81,17 +80,11 @@ public class SimulatedMove {
         } else {
             moveint += moveint2;
         }
-        if (folgezüge == 0) {
             return moveint;
-        }else{
-            ArrayList<Move> possibleMoves = GameRuleLogic.getPossibleMoves(gameState1);
-            int[] moveints = new int[possibleMoves.size()];
-            for (int i = 0; i < possibleMoves.size(); i++) {
-                moveints[i] = new SimulatedMove(possibleMoves.get(i),gameState1,folgezüge-1).evaluate();
-            }
-            return search(moveints, moveints.length);
-        }
+
     }
+
+    public GameState getGameStatefterMove(){return afterMove;}
 
     public Set<Field> größterSchwarm(Board board, PlayerColor player) {
         Set<Field> occupiedFields = GameRuleLogic.getOwnFields(board, player);
